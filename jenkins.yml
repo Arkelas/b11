@@ -15,7 +15,7 @@
     apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
     when: inventory_hostname in groups['jenkins']
 
-  - name: undate apt cache
+  - name: update apt cache
     apt:
       update_cache: yes
       state: latest
@@ -81,12 +81,6 @@
       name: docker
       state: present
 
-  - name: Add support to docker group
-    user:
-      name: support
-      groups: docker
-      append: yes
-
   - name: Add jenkins to docker group
     user:
       name: jenkins
@@ -94,5 +88,33 @@
       append: yes
     when: inventory_hostname in groups['jenkins']
 
-      
+# Jenkins user settings
+  - name: Add keypair to jenkins user
+    openssh_keypair:
+      path: /var/lib/jenkins/.ssh/id_rsa
+      comment: "jenkins_key"
+      owner: jenkins
+      group: jenkins
+    when: inventory_hostname in groups['jenkins']
 
+  - name: fetch all public ssh keys
+    shell: cat /var/lib/jenkins/.ssh/id_rsa.pub
+    register: ssh_keys
+    when: inventory_hostname in groups['jenkins']
+
+  - name: Add user jenkins to Prod and Stage machines
+    user:
+      name: jenkins
+      shell: /bin/bash
+    when: inventory_hostname in groups['prodstage']
+
+  - name: deploy keys on all servers
+    authorized_key: user=jenkins key="{{ item[0] }}"
+    delegate_to: "{{ item[1] }}"
+    with_nested:
+      - "{{ ssh_keys.stdout }}"
+      - "{{groups['prodstage']}}"
+    when: inventory_hostname in groups['jenkins']
+ 
+
+        
