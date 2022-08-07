@@ -80,6 +80,7 @@
     group: 
       name: docker
       state: present
+    when: inventory_hostname in groups['jenkins']
 
   - name: Add jenkins to docker group
     user:
