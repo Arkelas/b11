@@ -97,7 +97,7 @@
       group: jenkins
     when: inventory_hostname in groups['jenkins']
 
-  - name: fetch all public ssh keys
+  - name: fetch public ssh key
     shell: cat /var/lib/jenkins/.ssh/id_rsa.pub
     register: ssh_keys
     when: inventory_hostname in groups['jenkins']
@@ -108,7 +108,7 @@
       shell: /bin/bash
     when: inventory_hostname in groups['prodstage']
 
-  - name: deploy keys on all servers
+  - name: deploy key on Prod and Stage servers
     authorized_key: user=jenkins key="{{ item[0] }}"
     delegate_to: "{{ item[1] }}"
     with_nested:
