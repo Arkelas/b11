@@ -90,13 +90,13 @@
     when: inventory_hostname in groups['jenkins']
 
 # Jenkins user settings
-  - name: Add keypair to jenkins user
-    openssh_keypair:
-      path: /var/lib/jenkins/.ssh/id_rsa
-      comment: "jenkins_key"
-      owner: jenkins
-      group: jenkins
-    when: inventory_hostname in groups['jenkins']
+#  - name: Add keypair to jenkins user
+#    openssh_keypair:
+#      path: /var/lib/jenkins/.ssh/id_rsa
+#      comment: "jenkins_key"
+#      owner: jenkins
+#      group: jenkins
+#    when: inventory_hostname in groups['jenkins']
 
   - name: fetch public ssh key
     shell: cat /var/lib/jenkins/.ssh/id_rsa.pub
@@ -116,6 +116,14 @@
       - "{{ ssh_keys.stdout }}"
       - "{{groups['prodstage']}}"
     when: inventory_hostname in groups['jenkins']
+
+  - name: Allow jenkins group to have passwordless sudo
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%jenkins'
+      line: '%jenkins ALL=(ALL) NOPASSWD: ALL'
+      validate: 'visudo -cf %s'
  
 
         
